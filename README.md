@@ -37,24 +37,32 @@ This script does not pull segment data, map data, or gpx data.
     * e.g. http://localhost:4000
 
 # To run
-* load environment
+* load environment and run
 
         pipenv shell
         python strava_pull.py
 
-* the first time you run this,
+* the first time you run this
   * the file `credentials.json` will be saved locally
   * a browser will open for the authentication flow
 
-* to modify:
-   * edit the `strava_pull` script variables near the top
+* to customize:
+   * edit the `strava_pull.py` script variables near the top
 
-        is_celsius = False  # set to True for C, False for F
-        is_metric = False  # set to True for metric, False for standard
-        max_pages = None  # set to 1 for quick test or None to get all pages
+
+            is_celsius = False  # set to True for C, False for F
+            is_metric = False  # set to True for metric, False for standard
+            max_pages = None  # set to 1 for quick test or None to get all pages
+
 
    * comment out or reorder columns in `COLUMNS_ORDERED` list
 
 * to exit pipenv environment
 
         exit
+
+
+# Future Things To Do
+* lookup lat/long where city is missing
+* find a more performant way to gather ride detail, like calories
+* what else? drop me a line.
