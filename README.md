@@ -14,6 +14,8 @@ This script does not pull segment data, map data, or gpx data.
 * install pipenv if needed
 
         brew install pipenv
+        pipenv shell
+        pipenv install
 
 * if you don't have a Strava Client Application, Register for one here: https://www.strava.com/settings/api
    * Tips:
@@ -38,10 +40,6 @@ This script does not pull segment data, map data, or gpx data.
 * load environment
 
         pipenv shell
-        pipenv install
-
-* run script
-
         python strava_pull.py
 
 * the first time you run this,
@@ -57,3 +55,6 @@ This script does not pull segment data, map data, or gpx data.
 
    * comment out or reorder columns in `COLUMNS_ORDERED` list
 
+* to exit pipenv environment
+
+        exit
