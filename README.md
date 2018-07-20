@@ -48,6 +48,10 @@ This script does not pull segment data, map data, or gpx data.
   * the file `credentials.json` will be saved locally
   * a browser will open for the authentication flow
 
+* to modify edit the `strava_pull` script
 
+        is_celsius = False  # set to True for C, False for F
+        is_metric = False  # set to True for metric, False for standard
+        max_pages = None  # set to 1 for quick test or None to get all pages
 
 

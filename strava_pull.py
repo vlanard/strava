@@ -7,9 +7,9 @@ LOCAL_CREDS_FILE = 'credentials.json'
 LOCAL_SECRET_FILE = 'client_secret.json'
 SCOPES = "view_private"  # https://developers.strava.com/docs/authentication/
 
-is_celsius = True
-is_metric = True
-max_pages = 1  # set to 1 for quick test or None to get all pages
+is_celsius = False  # set to True for C, False for F
+is_metric = False  # set to True for metric, False for standard
+max_pages = None  # set to 1 for quick test or None to get all pages
 
 # todo optimize detail/calorie fetch. Too slow, would be nice to batch or async join :-(
 # todo lookup lat/long -> city
