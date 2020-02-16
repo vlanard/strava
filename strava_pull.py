@@ -24,7 +24,7 @@ is_metric = False  # set to True for metric, False for standard
 LOCAL_CREDS_FILE = 'credentials.json'
 LOCAL_SECRET_FILE = 'client_secret.json'
 LOCAL_LAST_SAVED_ID_FILE = 'last_saved.txt'
-SCOPES = "view_private"  # https://developers.strava.com/docs/authentication/
+SCOPES = "activity:read_all"  # https://developers.strava.com/docs/authentication/
 OUTPUT_FILE = 'strava_%s.tsv'  % datetime.now().strftime("%Y%m%d_%H%M")
 
 # todo optimize detail/calorie fetch. Too slow, would be nice to batch or async join :-(
