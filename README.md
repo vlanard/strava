@@ -55,7 +55,10 @@ This script does not pull segment data, map data, or gpx data.
             max_pages = None  # set to 1 for quick test or None to get all pages
 
 
-   * comment out or reorder columns in `COLUMNS_ORDERED` list
+   * comment out or reorder columns in `COLUMNS_ORDERED` list to change output
+
+   * Subsequent runs will only download newest activities. To redownload all activities,
+        delete the generated file `last_saved.txt` from this directory.
 
 * to exit pipenv environment
 
