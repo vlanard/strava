@@ -12,12 +12,12 @@ Call Strava API, connect oauth. Download your workout history to tab separated o
 Last saved workout is stored in `last_saved.txt` so future runs only output new activities.
 Delete last saved file to download all history.
 
-Usage: python strava_pull.py [outfilename]
-
+Usage: python strava_pull.py [300]
+optional -  specify max number of results fetched (starting with most current)
 '''
 
-max_pages = None  # set to 1 for quick test or None to get all pages
-page_size = 100  # 100
+DEFAULT_PAGE_SIZE = 100
+DEFAULT_MAX_PAGES = None
 is_celsius = False  # set to True for C, False for F
 is_metric = False  # set to True for metric, False for standard
 
@@ -25,7 +25,8 @@ LOCAL_CREDS_FILE = 'credentials.json'
 LOCAL_SECRET_FILE = 'client_secret.json'
 LOCAL_LAST_SAVED_ID_FILE = 'last_saved.txt'
 SCOPES = "activity:read_all"  # https://developers.strava.com/docs/authentication/
-OUTPUT_FILE = 'strava_%s.tsv'  % datetime.now().strftime("%Y%m%d_%H%M")
+NOW = datetime.now().strftime("%Y%m%d_%H%M")
+OUTPUT_FILE = 'strava_%s.tsv'  % NOW
 
 # todo optimize detail/calorie fetch. Too slow, would be nice to batch or async join :-(
 # todo lookup lat/long -> city (but not paying)
@@ -91,15 +92,24 @@ DELIMIT_FIELDS = ['name', 'description', 'gear_id', 'device_name', 'type']
 
 def init():
     # Setup the API oauth token locally, and return access token
-    # NOTE: TO CHANGE SCOPES, DELETE credentials.json file locally & RERUN
+    # NOTE: TO CHANGE SCOPES OR REFRESH AUTH, DELETE credentials.json file locally & RERUN
     store = file.Storage(LOCAL_CREDS_FILE)
     creds = store.get()
     if not creds or creds.invalid:
         flow = client.flow_from_clientsecrets(LOCAL_SECRET_FILE, SCOPES)
         creds = tools.run_flow(flow, store)
-    if creds and creds.access_token:
-        return creds.access_token
-    return None
+    if creds:
+        if creds.access_token_expired:
+            creds = refresh_credentials(creds)
+        if creds.access_token:
+            return creds.access_token
+
+
+def refresh_credentials(credentials):
+    import httplib2
+    http = credentials.authorize(httplib2.Http())
+    credentials.refresh(http)  # refresh our tokens
+    return credentials
 
 
 def call_strava(tok: str, route: str=None):
@@ -212,9 +222,10 @@ def output(str, end="\n", file=sys.stdout):
         print(str, end=end, file=sys.stdout)  # stdout
 
 
-def get_activities(tok: str, outfile: Optional[str]=None):
+def get_activities(tok: str, max_results=None):
     """https://developers.strava.com/docs/reference/#api-models-SummaryActivity"""
 
+    outfile = OUTPUT_FILE
     if os.path.exists(outfile):
         sys.exit(f"Output file already exists: {outfile}")
 
@@ -227,6 +238,10 @@ def get_activities(tok: str, outfile: Optional[str]=None):
         else:
             output(c, end="\t", file=fh)
     output("", file=fh)
+
+
+    page_size = get_page_size(max_results)
+    max_pages = get_max_pages(max_results)
 
     # page through strava results (or until we reach last saved record, if applicable)
     page = 1
@@ -271,10 +286,25 @@ def get_gear(tok: str, _id: str):
         return ""
 
 
+def get_page_size(max_results:int):
+    if max_results and max_results < DEFAULT_PAGE_SIZE:
+        return max_results
+    return DEFAULT_PAGE_SIZE
+
+
+def get_max_pages(max_results:int):
+    if not max_results:
+        return None  # get all there are to get if not capped
+    max_pages,foo = divmod(max_results,DEFAULT_PAGE_SIZE)
+    # if 101 results, get 2 pages, if <=100 results, get 1 page
+    return max_pages + 1
+
+
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        outputfile = sys.argv[1]
-    else:
-        outputfile = OUTPUT_FILE
+    num_args = len(sys.argv)
+    max_results = None
+    if num_args > 1:
+        max_results = int(sys.argv[1])
+
     token = init()
-    get_activities(token, outputfile)
+    get_activities(token, max_results=max_results)
