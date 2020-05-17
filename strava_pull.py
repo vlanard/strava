@@ -32,6 +32,7 @@ OUTPUT_FILE = 'strava_%s.tsv'  % NOW
 # todo lookup lat/long -> city (but not paying)
 # todo test single and double quote in description
 # todo change tsv to csv
+# todo remove incomplete files (with only header row)
 
 # desired order (and inclusion) of columns from Strava's API
 COLUMNS_ORDERED = [
@@ -39,7 +40,10 @@ COLUMNS_ORDERED = [
     'name',
     'description',
     'type',
+    "device_name",
+    'trainer',
     'distance',
+    'manual',
     'moving_time',
     'elapsed_time',
     "calories",
@@ -53,7 +57,6 @@ COLUMNS_ORDERED = [
     'max_heartrate',
     'average_temp',
     'athlete_count',
-    "device_name",
     'gear_id',
     'location_city',
     'location_state',
@@ -63,7 +66,8 @@ COLUMNS_ORDERED = [
     'weighted_average_watts',
     'kilojoules',
     'average_cadence',
-    'id',
+    'total_photo_count',
+    'id'
 ]
 
 # fields that require a per-activity lookup
@@ -238,7 +242,6 @@ def get_activities(tok: str, max_results=None):
         else:
             output(c, end="\t", file=fh)
     output("", file=fh)
-
 
     page_size = get_page_size(max_results)
     max_pages = get_max_pages(max_results)
