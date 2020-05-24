@@ -41,31 +41,31 @@ COLUMNS_ORDERED = [
     'description',
     'type',
     "device_name",
-    'trainer',
     'distance',
-    'manual',
-    'moving_time',
-    'elapsed_time',
-    "calories",
     'total_elevation_gain',
-    'elev_high',
-    'elev_low',
+    'average_watts',
+    'weighted_average_watts',
+    'average_cadence',
+    'moving_time',
     'average_speed',
     'max_speed',
+    'gear_id',
+    "calories",
     'suffer_score',
     'average_heartrate',
     'max_heartrate',
     'average_temp',
+    'trainer',
+    'manual',
+    'elapsed_time',
+    'elev_high',
+    'elev_low',
     'athlete_count',
-    'gear_id',
     'location_city',
     'location_state',
     'start_latlng',
     'end_latlng',
-    'average_watts',
-    'weighted_average_watts',
     'kilojoules',
-    'average_cadence',
     'total_photo_count',
     'id'
 ]
@@ -79,14 +79,14 @@ DETAIL_LOOKUP_COLUMNS = {
 
 COLUMNS_TO_LABELS = {
     # 'external_id': 'device_src_id',
-    'moving_time': 'moving_time min',
-    'elapsed_time': 'elapsed_time min',
-    'average_temp': 'average_temp %s' % ('C' if is_celsius else 'F'),
-    'elev_high': 'elev_high %s' % ('m' if is_metric else 'ft'),
-    'elev_low': 'elev_low %s' % ('m' if is_metric else 'ft'),
-    'total_elevation_gain': 'total_elevation_gain %s' % ('m' if is_metric else 'ft'),
-    'average_speed': 'average_speed %s' % ('km/h' if is_metric else 'mi/h'),
-    'max_speed': 'max_speed %s' % ('km/h' if is_metric else 'mi/h'),
+    'moving_time': 'moving time min',
+    'elapsed_time': 'elapsed time min',
+    'average_temp': 'average temp %s' % ('C' if is_celsius else 'F'),
+    'elev_high': 'elev high %s' % ('m' if is_metric else 'ft'),
+    'elev_low': 'elev low %s' % ('m' if is_metric else 'ft'),
+    'total_elevation_gain': 'total elevation gain %s' % ('m' if is_metric else 'ft'),
+    'average_speed': 'average speed %s' % ('km/h' if is_metric else 'mi/h'),
+    'max_speed': 'max speed %s' % ('km/h' if is_metric else 'mi/h'),
     'distance': 'distance %s' % ('km' if is_metric else 'mi'),
     'id': 'url',
     'gear_id': 'gear'
@@ -240,7 +240,7 @@ def get_activities(tok: str, max_results=None):
         if c in COLUMNS_TO_LABELS:
             output(COLUMNS_TO_LABELS[c], end="\t", file=fh)
         else:
-            output(c, end="\t", file=fh)
+            output(c.replace("_"," "), end="\t", file=fh)
     output("", file=fh)
 
     page_size = get_page_size(max_results)
