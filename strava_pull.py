@@ -26,7 +26,7 @@ LOCAL_SECRET_FILE = 'client_secret.json'
 LOCAL_LAST_SAVED_ID_FILE = 'last_saved.txt'
 SCOPES = "activity:read_all"  # https://developers.strava.com/docs/authentication/
 NOW = datetime.now().strftime("%Y%m%d_%H%M")
-OUTPUT_FILE = 'strava_%s.tsv'  % NOW
+OUTPUT_FILE = 'data/strava_%s.tsv'  % NOW
 
 # todo optimize detail/calorie fetch. Too slow, would be nice to batch or async join :-(
 # todo lookup lat/long -> city (but not paying)
@@ -212,6 +212,8 @@ def get_activity_detail(tok: str, _id: int):
 
 
 def sanitize(output:str, field: str):
+    return output
+    # TEMP
     if output and field:
         if field in DELIMIT_FIELDS:
             output = output.replace("'","\"") #replace single with double quote
@@ -229,56 +231,66 @@ def output(str, end="\n", file=sys.stdout):
 def get_activities(tok: str, max_results=None):
     """https://developers.strava.com/docs/reference/#api-models-SummaryActivity"""
 
+    data_written = False
     outfile = OUTPUT_FILE
     if os.path.exists(outfile):
         sys.exit(f"Output file already exists: {outfile}")
 
-    fh = open(outfile, mode="w")
-    last_saved_id = read_last_saved()
-    # print header row
-    for c in COLUMNS_ORDERED:
-        if c in COLUMNS_TO_LABELS:
-            output(COLUMNS_TO_LABELS[c], end="\t", file=fh)
-        else:
-            output(c.replace("_"," "), end="\t", file=fh)
-    output("", file=fh)
+    try:
+        fh = open(outfile, mode="w")
+        last_saved_id = read_last_saved()
+        # print header row
+        for c in COLUMNS_ORDERED:
+            if c in COLUMNS_TO_LABELS:
+                output(COLUMNS_TO_LABELS[c], end="\t", file=fh)
+            else:
+                output(c.replace("_"," "), end="\t", file=fh)
+        output("", file=fh)
 
-    page_size = get_page_size(max_results)
-    max_pages = get_max_pages(max_results)
+        page_size = get_page_size(max_results)
+        max_pages = get_max_pages(max_results)
 
-    # page through strava results (or until we reach last saved record, if applicable)
-    page = 1
-    results = True
-    gear_map = {}
-    most_recent_id = None
-    while results:
-        results = call_strava(
-            tok, route=f'/athlete/activities?per_page={page_size}&page={page}')
-        for item in results:
-            curr_id = item['id']
-            if last_saved_id and last_saved_id == curr_id:
-                break  # we've reached known data, exit
-            if not most_recent_id:
-                most_recent_id = curr_id
-            details = get_activity_detail(tok, curr_id)
-            for k in COLUMNS_ORDERED:
-                v = item.get(k, "")
-                if k in DETAIL_LOOKUP_COLUMNS:
-                    output(sanitize(details.get(k, ''),k), end='\t', file=fh)
-                elif k == 'gear_id' and v:
-                    if v not in gear_map:
-                        gear = get_gear(token, v)
-                        gear_map[v] = gear
-                    output(sanitize(gear_map.get(v, ''),k), end='\t', file=fh)
-                else:
-                    output(sanitize(columns_to_values(k, v),k), end="\t", file=fh)
-            output("", file=fh)
-        if max_pages and max_pages == page:
-            break
-        page += 1
+        # page through strava results (or until we reach last saved record, if applicable)
+        page = 1
+        results = True
+        gear_map = {}
+        most_recent_id = None
+        while results:
+            results = call_strava(
+                tok, route=f'/athlete/activities?per_page={page_size}&page={page}')
+            for item in results:
+                curr_id = item['id']
+                if last_saved_id and last_saved_id == curr_id and not max_results:
+                    break  # we've reached known data, exit
+                if not most_recent_id:
+                    most_recent_id = curr_id
+                details = get_activity_detail(tok, curr_id)
+                for k in COLUMNS_ORDERED:
+                    v = item.get(k, "")
+                    if k in DETAIL_LOOKUP_COLUMNS:
+                        output(sanitize(details.get(k, ''),k), end='\t', file=fh)
+                    elif k == 'gear_id' and v:
+                        if v not in gear_map:
+                            gear = get_gear(token, v)
+                            gear_map[v] = gear
+                        output(sanitize(gear_map.get(v, ''),k), end='\t', file=fh)
+                    else:
+                        output(sanitize(columns_to_values(k, v),k), end="\t", file=fh)
+                output("", file=fh)
+                data_written = True
+            if max_pages and max_pages == page:
+                break
+            page += 1
 
-    write_last_saved(most_recent_id)
-    fh.close()
+        write_last_saved(most_recent_id)
+        fh.close()
+    except Exception:
+        if not data_written:
+            cleanup_empty()
+
+
+def cleanup_empty():
+    os.remove(OUTPUT_FILE)
 
 
 def get_gear(tok: str, _id: str):
