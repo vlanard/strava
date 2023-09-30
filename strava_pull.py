@@ -1,6 +1,9 @@
+### important - run this as `python3 -u script 100` to be able to use tee or pipe to file
+
 from oauth2client import file, client, tools
 from datetime import datetime
 import dateutil.parser
+import logging
 import json
 import os
 import requests
@@ -12,7 +15,7 @@ Call Strava API, connect oauth. Download your workout history to tab separated o
 Last saved workout is stored in `last_saved.txt` so future runs only output new activities.
 Delete last saved file to download all history.
 
-Usage: python strava_pull.py [300]
+Usage: python3 -u3 -u3 -u strava_pull.py [300]
 optional -  specify max number of results fetched (starting with most current)
 '''
 
@@ -55,14 +58,14 @@ COLUMNS_ORDERED = [
     'average_heartrate',
     'max_heartrate',
     'average_temp',
-    'trainer',
-    'manual',
+    'trainer', # MOVE
+    'manual', # MOVE
     'elapsed_time',
     'elev_high',
     'elev_low',
     'athlete_count',
-    'location_city',
-    'location_state',
+    'location_city',  # MOVE
+    'location_state', # MOVE
     'start_latlng',
     'end_latlng',
     'kilojoules',
@@ -94,27 +97,47 @@ COLUMNS_TO_LABELS = {
 
 DELIMIT_FIELDS = ['name', 'description', 'gear_id', 'device_name', 'type']
 
-def init():
+def cred_init(force_reset=False):
     # Setup the API oauth token locally, and return access token
     # NOTE: TO CHANGE SCOPES OR REFRESH AUTH, DELETE credentials.json file locally & RERUN
-    store = file.Storage(LOCAL_CREDS_FILE)
-    creds = store.get()
-    if not creds or creds.invalid:
-        flow = client.flow_from_clientsecrets(LOCAL_SECRET_FILE, SCOPES)
-        creds = tools.run_flow(flow, store)
+    #store = file.Storage(LOCAL_CREDS_FILE)
+    creds = cred_read_local(force_reset)
     if creds:
         if creds.access_token_expired:
-            creds = refresh_credentials(creds)
+            logging.warning("Token expired, attempting refresh")
+            creds = cred_refresh(creds) #will repopulate or throw exception
         if creds.access_token:
             return creds.access_token
 
+# read our locally cached creds/token store
+def cred_read_local(force_reset=False):
+    store = file.Storage(LOCAL_CREDS_FILE)
+    creds = store.get()
+    if not creds or creds.invalid or force_reset:
+        # this will fail if ANY arguments are passed to this python script
+        flow = client.flow_from_clientsecrets(LOCAL_SECRET_FILE, SCOPES)
+        creds = tools.run_flow(flow, store)
+        pass
+    return creds
 
-def refresh_credentials(credentials):
+
+def cred_refresh(credentials):
     import httplib2
     http = credentials.authorize(httplib2.Http())
     credentials.refresh(http)  # refresh our tokens
     return credentials
 
+
+# manually run this to reauthorize my own key/app if we accidentally delete the
+#    authorization on Strava but still have the registered oauth app/API set up
+def cred_reauthorize_manual():
+    # be sure you remove all parameters to this script before you run it, or it will incorrectly try to read them
+    cred_init(True) #todo backup prev credentials.json -> credentials.json.date
+    sys.exit()
+    # UNDER THE COVERS IT OPENS auth url for human interaction - so this part is NOT needed but shows what is happening
+    #url_auth = f"http://www.strava.com/oauth/authorize?client_id={client_id}&response_type=code&redirect_uri=http://localhost/exchange_token&approval_prompt=force&scope=read_all"
+    #url_apps = f"https://www.strava.com/settings/apps"
+    # sys.exit(f"1. Open in browser, Authorize, ignore redirect 404:\n{url_auth}\n\n2. then verify in My Apps that 'valer' app is re-enabled\n{url_apps}")
 
 def call_strava(tok: str, route: str=None):
     ''' call strava api and return data as python form'''
@@ -321,5 +344,5 @@ if __name__ == '__main__':
     if num_args > 1:
         max_results = int(sys.argv[1])
 
-    token = init()
+    token = cred_init()
     get_activities(token, max_results=max_results)
