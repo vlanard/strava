@@ -230,7 +230,7 @@ def get_activity_detail(tok: str, _id: int):
     details_full = call_strava(tok, route=f'/activities/{_id}')
     details = {}
     for k in DETAIL_LOOKUP_COLUMNS:
-        details[k] = details_full.get(k, "")
+        details[k] = details_full.get(k, "") or "" #the or changes a defined None (not missing) to empty string too
     return details
 
 
