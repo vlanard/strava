@@ -7,7 +7,7 @@ This script does not pull segment data, map data, or gpx data.
 
 # Prerequisites
 * This script assumes the following are installed
-  * python3.7
+  * python3
   * homebrew
 
 # One time setup
@@ -24,6 +24,7 @@ This script does not pull segment data, map data, or gpx data.
      * Website: http://notarealsite.com or your real url
      * Description: developer
      * Authorization Callback Domain: localhost:4000
+     * Club (skip this)
 
 * create your `client_secret.json` file
 
@@ -40,7 +41,7 @@ This script does not pull segment data, map data, or gpx data.
 * load environment and run
 
         pipenv shell
-        python strava_pull.py
+        python3 strava_pull.py
 
 * the first time you run this
   * the file `credentials.json` will be saved locally
