@@ -1,6 +1,7 @@
 ### important - run this as `python3 -u script 100` to be able to use tee or pipe to file
 
 from oauth2client import file, client, tools
+import argparse
 from datetime import datetime
 import dateutil.parser
 import logging
@@ -30,7 +31,7 @@ LOCAL_LAST_SAVED_ID_FILE = 'last_saved.txt'
 SCOPES = "activity:read_all"  # https://developers.strava.com/docs/authentication/
 NOW = datetime.now().strftime("%Y%m%d_%H%M")
 OUTPUT_FILE = 'data/strava_%s.tsv'  % NOW
-
+START_PAGE = 1
 # todo optimize detail/calorie fetch. Too slow, would be nice to batch or async join :-(
 # todo lookup lat/long -> city (but not paying)
 # todo test single and double quote in description
@@ -251,7 +252,7 @@ def output(str, end="\n", file=sys.stdout):
         print(str, end=end, file=sys.stdout)  # stdout
 
 
-def get_activities(tok: str, max_results=None):
+def get_activities(tok: str, max_results=None, page=START_PAGE):
     """https://developers.strava.com/docs/reference/#api-models-SummaryActivity"""
 
     data_written = False
@@ -274,7 +275,6 @@ def get_activities(tok: str, max_results=None):
         max_pages = get_max_pages(max_results)
 
         # page through strava results (or until we reach last saved record, if applicable)
-        page = 1
         results = True
         gear_map = {}
         most_recent_id = None
@@ -339,10 +339,18 @@ def get_max_pages(max_results:int):
 
 
 if __name__ == '__main__':
-    num_args = len(sys.argv)
     max_results = None
-    if num_args > 1:
-        max_results = int(sys.argv[1])
+    parser = argparse.ArgumentParser(description="Pull Strava activities from API.")
+    parser.add_argument("max_results",
+                        type=int, default=DEFAULT_PAGE_SIZE,
+                        nargs='?',  # `?` means 0 or 1 positional value - OPTIONAL
+                        help=f"How many results to pull (default: {DEFAULT_PAGE_SIZE})")
+    parser.add_argument(
+        "-p", "--page", type=int, default=1,
+        help="(Optional) starting page number (default: 1)"
+    )
+    args = parser.parse_args()
+    print(f"Pulling {args.max_results} results starting from page {args.page}")
 
     token = cred_init()
-    get_activities(token, max_results=max_results)
+    get_activities(token, max_results=args.max_results, page=args.page)
