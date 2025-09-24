@@ -16,8 +16,18 @@ Call Strava API, connect oauth. Download your workout history to tab separated o
 Last saved workout is stored in `last_saved.txt` so future runs only output new activities.
 Delete last saved file to download all history.
 
-Usage: python3 -u3 -u3 -u strava_pull.py [300]
-optional -  specify max number of results fetched (starting with most current)
+usage: strava_pull.py [-h] [-p PAGE] [max_results]
+
+positional arguments:
+  max_results           How many results to pull (default: 100)
+
+options:
+  -h, --help            show this help message and exit
+  -p PAGE, --page PAGE  (Optional) starting page number (default: 1)
+  
+examples:
+    python3 strava_pull.py 35  -- pull the first 35 results
+    python3 strava_pull.py -p 2 80 -- pull 80 results, starting from page 2
 '''
 
 DEFAULT_PAGE_SIZE = 100
