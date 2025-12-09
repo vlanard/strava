@@ -43,7 +43,7 @@ NOW = datetime.now().strftime("%Y%m%d_%H%M")
 OUTPUT_FILE = 'data/strava_%s.tsv'  % NOW
 START_PAGE = 1
 # todo optimize detail/calorie fetch. Too slow, would be nice to batch or async join :-(
-# todo lookup lat/long -> city (but not paying)
+# todo lookup lat/long -> city (i'm not paying for a service to do this)
 # todo test single and double quote in description
 # todo change tsv to csv
 # todo remove incomplete files (with only header row)
@@ -91,6 +91,7 @@ DETAIL_LOOKUP_COLUMNS = {
     'description'
 }
 
+#API name to output name mapping
 COLUMNS_TO_LABELS = {
     # 'external_id': 'device_src_id',
     'moving_time': 'moving time min',
